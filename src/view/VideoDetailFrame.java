@@ -3,6 +3,8 @@ package view;
 import model.Video;
 import model.Comment;
 import controller.VideoController;
+import controller.CommentController;
+import controller.LikeController;
 import model.User;
 
 import javax.swing.*;
@@ -16,28 +18,35 @@ public class VideoDetailFrame extends JFrame {
         this.user = user;
 
         setTitle("Video Details");
-        setSize(400, 500);
+        setSize(500, 400);
         setLocationRelativeTo(null);
 
         JPanel panel = new JPanel(new BorderLayout());
 
-        // Video detayları
-        JTextArea detailsArea = new JTextArea();
-        detailsArea.setEditable(false);
-        detailsArea.setText(
-                "Başlık: " + video.getTitle() + "\n" +
-                "Tür: " + video.getGenre() + "\n" +
-                "Açıklama: " + video.getDescription() + "\n" +
-                "Süre: " + video.getDuration() + " dk"
-        );
-        panel.add(detailsArea, BorderLayout.NORTH);
+        // Video detayları için panel
+        JPanel detailsPanel = new JPanel(new GridLayout(5, 1, 5, 5)); // 4 -> 5 satır
+        detailsPanel.add(new JLabel("Başlık: " + video.getTitle()));
+        detailsPanel.add(new JLabel("Tür: " + video.getGenre()));
+        detailsPanel.add(new JLabel("Açıklama: " + video.getDescription()));
+        detailsPanel.add(new JLabel("Süre: " + video.getDuration() + " dk"));
+
+        VideoController videoController = new VideoController();
+        CommentController commentController = new CommentController();
+        LikeController likeController = new LikeController();
+
+        // Beğeni sayısı etiketi
+        int likeCount = likeController.getLikeCount(video.getVideoID());
+        JLabel likeCountLabel = new JLabel("Beğeni: " + likeCount);
+        detailsPanel.add(likeCountLabel);
+
+        panel.add(detailsPanel, BorderLayout.NORTH);
 
         // Yorumlar
         JTextArea commentsArea = new JTextArea();
         commentsArea.setEditable(false);
 
-        VideoController controller = new VideoController();
-        List<Comment> comments = controller.getCommentsForVideo(video.getVideoID());
+        List<Comment> comments = commentController.getCommentsByVideoID(video.getVideoID());
+
         StringBuilder sb = new StringBuilder();
         sb.append("Yorumlar:\n");
         for (Comment c : comments) {
@@ -56,8 +65,9 @@ public class VideoDetailFrame extends JFrame {
         commentPanel.add(commentField, BorderLayout.CENTER);
         commentPanel.add(commentButton, BorderLayout.EAST);
 
-        // Beğenme butonu
-        JButton likeButton = new JButton("Beğen");
+        // Beğenme/bırakma butonu
+        boolean[] liked = {likeController.hasUserLikedVideo(user.getUserID(), video.getVideoID())};
+        JButton likeButton = new JButton(liked[0] ? "Beğenmekten Vazgeç" : "Beğen");
 
         bottomPanel.add(commentPanel, BorderLayout.CENTER);
         bottomPanel.add(likeButton, BorderLayout.EAST);
@@ -68,9 +78,10 @@ public class VideoDetailFrame extends JFrame {
         commentButton.addActionListener(e -> {
             String commentText = commentField.getText().trim();
             if (!commentText.isEmpty()) {
-                controller.addComment(user.getUserID(), video.getVideoID(), commentText);
+                Comment newComment = new Comment(user.getUserID(), video.getVideoID(), commentText);
+                commentController.addComment(newComment);
                 // Yorumları yeniden çek ve göster
-                List<Comment> updatedComments = controller.getCommentsForVideo(video.getVideoID());
+                List<Comment> updatedComments = commentController.getCommentsByVideoID(video.getVideoID());
                 StringBuilder sb2 = new StringBuilder();
                 sb2.append("Yorumlar:\n");
                 for (Comment c : updatedComments) {
@@ -81,10 +92,23 @@ public class VideoDetailFrame extends JFrame {
             }
         });
 
-        // Beğenme işlemi
+        // Beğen/bırak işlemi
         likeButton.addActionListener(e -> {
-            controller.likeVideo(user.getUserID(), video.getVideoID());
-            JOptionPane.showMessageDialog(this, "Beğendiniz!");
+            if (liked[0]) {
+                // Beğeniyi geri al
+                likeController.unlikeVideo(user.getUserID(), video.getVideoID());
+                liked[0] = false;
+                likeButton.setText("Beğen");
+                JOptionPane.showMessageDialog(this, "Beğenmekten vazgeçtiniz.");
+            } else {
+                likeController.likeVideo(user.getUserID(), video.getVideoID());
+                liked[0] = true;
+                likeButton.setText("Beğenmekten Vazgeç"); 
+                JOptionPane.showMessageDialog(this, "Beğendiniz!");
+            }
+            // Beğeni sayısını güncelle
+            int updatedLikeCount = likeController.getLikeCount(video.getVideoID());
+            likeCountLabel.setText("Beğeni: " + updatedLikeCount);
         });
 
         add(panel);

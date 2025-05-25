@@ -1,8 +1,6 @@
 package controller;
 
 import model.Comment;
-import model.Video;
-import model.User;
 import db.DatabaseConnection;
 
 import java.sql.*;
@@ -31,20 +29,21 @@ public class CommentController {
         }
     }
 
-    public List<Comment> getCommentsByVideo(String videoID) {
+    public List<Comment> getCommentsByVideoID(String videoID) {
         List<Comment> comments = new ArrayList<>();
         String query = "SELECT * FROM Commented WHERE VideoID = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(query)) {
             pstmt.setString(1, videoID);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                Comment comment = new Comment();
-                comment.setCommentID(rs.getString("CommentID"));
-                comment.setUserID(rs.getString("UserID"));
-                comment.setVideoID(rs.getString("VideoID"));
-                comment.setCommentedAt(rs.getTimestamp("CommentedAt").toLocalDateTime());
-                comment.setContent(rs.getString("Content"));
-                comment.setParentCommentID(rs.getString("ParentCommentID"));
+                Comment comment = new Comment(
+                    rs.getString("CommentID"),
+                    rs.getString("UserID"),
+                    rs.getString("VideoID"),
+                    rs.getTimestamp("CommentedAt").toLocalDateTime(),
+                    rs.getString("Content"),
+                    rs.getString("ParentCommentID")
+                );
                 comments.add(comment);
             }
         } catch (SQLException e) {
