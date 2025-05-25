@@ -90,6 +90,26 @@ public class VideoController {
         }
     }
 
+    public List<Video> getAllVideos() {
+        List<Video> videos = new ArrayList<>();
+        String query = "SELECT * FROM Video";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Video video = new Video();
+                video.setVideoID(rs.getString("VideoID"));
+                video.setTitle(rs.getString("Title"));
+                video.setGenre(rs.getString("Genre"));
+                video.setDescription(rs.getString("Description"));
+                video.setDuration(rs.getInt("Duration"));
+                videos.add(video);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return videos;
+    }
+
     private String generateLikeID() {
         // Logic to generate a unique LikeID
         return "like_" + System.currentTimeMillis();

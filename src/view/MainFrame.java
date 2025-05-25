@@ -42,7 +42,7 @@ public class MainFrame extends JFrame {
 
         tabbedPane = new JTabbedPane();
 
-        videoPanel = new VideoPanel();
+        videoPanel = new VideoPanel(user);
         actorPanel = new ActorPanel();
         playlistPanel = new PlaylistPanel();
 
@@ -51,22 +51,6 @@ public class MainFrame extends JFrame {
         tabbedPane.addTab("Playlists", playlistPanel);
 
         add(tabbedPane, BorderLayout.CENTER);
-
-        JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new JMenu("File");
-        JMenuItem logoutItem = new JMenuItem("Logout");
-
-        logoutItem.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Logic to handle logout
-                System.out.println("User logged out.");
-            }
-        });
-
-        fileMenu.add(logoutItem);
-        menuBar.add(fileMenu);
-        setJMenuBar(menuBar);
     }
 
     public static void main(String[] args) {
