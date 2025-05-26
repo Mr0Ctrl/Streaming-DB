@@ -1,0 +1,102 @@
+-- UserController.java
+
+-- Checks if a user exists with the given username and password (for login)
+SELECT * FROM User WHERE Username = ? AND Password = ?;
+
+-- Retrieves a user by username
+SELECT * FROM User WHERE Username = ?;
+
+-- Retrieves a user by userID
+SELECT * FROM User WHERE UserID = ?;
+
+
+-- VideoController.java
+
+-- Retrieves video details by videoID
+SELECT * FROM Video WHERE VideoID = ?;
+
+-- Retrieves all videos in the system
+SELECT * FROM Video;
+
+
+-- PlaylistController.java
+
+-- Inserts a new playlist into the Playlist table
+INSERT INTO Playlist (PlaylistID, Name, UserID, Description, CreatedOn, IsPublic) VALUES (?, ?, ?, ?, ?, ?);
+
+-- Retrieves all playlists belonging to a specific user
+SELECT * FROM Playlist WHERE UserID = ?;
+
+-- Adds a video to a playlist with the next order number
+INSERT INTO PlaylistReferenceVideo (PlaylistID, VideoID, VideoOrder) VALUES (?, ?, ?);
+
+-- Gets the next order number for a video in a playlist
+SELECT COUNT(*) FROM PlaylistReferenceVideo WHERE PlaylistID = ?;
+
+-- Retrieves all playlists in the system
+SELECT * FROM Playlist;
+
+-- Removes a playlist by its ID
+DELETE FROM Playlist WHERE PlaylistID = ?;
+
+
+-- PlaybackHistoryController.java
+
+-- Adds a new playback history record for a user and video
+INSERT INTO PlaybackHistory (HistoryID, UserID, VideoID, WatchedAt, WatchedDuration, IsCompleted) VALUES (?, ?, ?, ?, ?, ?);
+
+-- Retrieves all videos watched by a user, ordered by watch time (most recent first)
+SELECT v.* FROM PlaybackHistory h JOIN Video v ON h.VideoID = v.VideoID WHERE h.UserID = ? ORDER BY h.WatchedAt DESC;
+
+
+-- LikeController.java
+
+-- Checks if a user has already liked a specific video
+SELECT 1 FROM Liked WHERE UserID = ? AND VideoID = ?;
+
+-- Inserts a new like for a video by a user
+INSERT INTO Liked (LikeID, UserID, VideoID, LikedAt) VALUES (?, ?, ?, NOW());
+
+-- Counts the number of likes for a specific video
+SELECT COUNT(*) FROM Liked WHERE VideoID = ?;
+
+-- Removes a like for a video by a user
+DELETE FROM Liked WHERE UserID = ? AND VideoID = ?;
+
+-- Retrieves all videos liked by a user
+SELECT v.* FROM Liked l JOIN Video v ON l.VideoID = v.VideoID WHERE l.UserID = ?;
+
+
+-- CommentController.java
+
+-- Inserts a new comment for a video
+INSERT INTO Commented (CommentID, UserID, VideoID, CommentedAt, Content, ParentCommentID) VALUES (?, ?, ?, ?, ?, ?);
+
+-- Retrieves all comments for a specific video
+SELECT * FROM Commented WHERE VideoID = ?;
+
+
+-- ActorController.java
+
+-- Retrieves an actor by their ID
+SELECT * FROM Actor WHERE ActorID = ?;
+
+-- Retrieves all actors in the system
+SELECT * FROM Actor;
+
+-- Retrieves all videos that a specific actor has acted in
+SELECT v.VideoID, v.Title, v.Genre, v.Description, v.Duration
+FROM Video v
+JOIN Video_Actor va ON v.VideoID = va.VideoID
+WHERE va.ActorID = ?;
+
+-- Retrieves all actors for a specific video
+SELECT a.* FROM Actor a
+JOIN Video_Actor va ON a.ActorID = va.ActorID
+WHERE va.VideoID = ?;
+
+-- Inserts a new actor into the Actor table
+INSERT INTO Actor (ActorID, FirstName, LastName, DateOfBirth, Biography) VALUES (?, ?, ?, ?, ?);
+
+-- Deletes an actor by their ID
+DELETE FROM Actor WHERE ActorID = ?;
