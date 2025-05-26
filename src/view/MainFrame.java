@@ -10,7 +10,6 @@ public class MainFrame extends JFrame {
     private User currentUser;
     private JTabbedPane tabbedPane;
     private VideoPanel videoPanel;
-    private ActorPanel actorPanel;
     private PlaylistPanel playlistPanel;
 
     public MainFrame(User user) {
@@ -43,11 +42,9 @@ public class MainFrame extends JFrame {
         tabbedPane = new JTabbedPane();
 
         videoPanel = new VideoPanel(user);
-        actorPanel = new ActorPanel();
         playlistPanel = new PlaylistPanel();
 
         tabbedPane.addTab("Videos", videoPanel);
-        tabbedPane.addTab("Actors", actorPanel);
         tabbedPane.addTab("Playlists", playlistPanel);
 
         add(tabbedPane, BorderLayout.CENTER);

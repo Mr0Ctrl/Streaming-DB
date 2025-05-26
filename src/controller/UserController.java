@@ -50,4 +50,24 @@ public class UserController {
         }
         return null;
     }
+
+    public User getUserById(String userId) {
+        String query = "SELECT * FROM User WHERE UserID = ?";
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new User(
+                    rs.getString("UserID"),
+                    rs.getString("Email"),
+                    rs.getString("Username"),
+                    rs.getString("Password")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

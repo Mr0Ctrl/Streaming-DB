@@ -81,4 +81,56 @@ public class ActorController {
         }
         return videos;
     }
+
+    // Bir videoda oynayan aktörleri döndürür
+    public List<Actor> getActorsByVideoID(String videoId) {
+        List<Actor> actors = new ArrayList<>();
+        String query = "SELECT a.* FROM Actor a " +
+                       "JOIN Video_Actor va ON a.ActorID = va.ActorID " +
+                       "WHERE va.VideoID = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, videoId);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                Actor actor = new Actor();
+                actor.setActorID(rs.getString("ActorID"));
+                actor.setFirstName(rs.getString("FirstName"));
+                actor.setLastName(rs.getString("LastName"));
+                actor.setDateOfBirth(rs.getDate("DateOfBirth").toLocalDate());
+                actor.setBiography(rs.getString("Biography"));
+                actors.add(actor);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return actors;
+    }
+
+    // Aktör ekleme
+    public boolean addActor(Actor actor) {
+        String query = "INSERT INTO Actor (ActorID, FirstName, LastName, DateOfBirth, Biography) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, actor.getActorID());
+            statement.setString(2, actor.getFirstName());
+            statement.setString(3, actor.getLastName());
+            statement.setDate(4, java.sql.Date.valueOf(actor.getDateOfBirth()));
+            statement.setString(5, actor.getBiography());
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Aktör silme
+    public boolean deleteActor(String actorId) {
+        String query = "DELETE FROM Actor WHERE ActorID = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, actorId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

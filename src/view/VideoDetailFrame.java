@@ -6,6 +6,9 @@ import controller.VideoController;
 import controller.CommentController;
 import controller.LikeController;
 import model.User;
+import model.Actor;
+import controller.ActorController;
+import controller.UserController; // Add this import
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,94 +24,172 @@ public class VideoDetailFrame extends JFrame {
         setSize(500, 400);
         setLocationRelativeTo(null);
 
+        // Main panel with BorderLayout
         JPanel panel = new JPanel(new BorderLayout());
 
-        // Video detayları için panel
-        JPanel detailsPanel = new JPanel(new GridLayout(5, 1, 5, 5)); // 4 -> 5 satır
-        detailsPanel.add(new JLabel("Başlık: " + video.getTitle()));
-        detailsPanel.add(new JLabel("Tür: " + video.getGenre()));
-        detailsPanel.add(new JLabel("Açıklama: " + video.getDescription()));
-        detailsPanel.add(new JLabel("Süre: " + video.getDuration() + " dk"));
+        // Panel for video details (top section)
+        JPanel detailsPanel = new JPanel(new GridLayout(6, 1, 3, 3));
+        detailsPanel.add(new JLabel("Title: " + video.getTitle()));
+        detailsPanel.add(new JLabel("Genre: " + video.getGenre()));
+        detailsPanel.add(new JLabel("Description: " + video.getDescription()));
+        detailsPanel.add(new JLabel("Duration: " + video.getDuration() + " min"));
 
+        // Controllers
         VideoController videoController = new VideoController();
         CommentController commentController = new CommentController();
         LikeController likeController = new LikeController();
+        ActorController actorController = new ActorController();
+        UserController userController = new UserController(); // Add this
 
-        // Beğeni sayısı etiketi
+        // Like count label
         int likeCount = likeController.getLikeCount(video.getVideoID());
-        JLabel likeCountLabel = new JLabel("Beğeni: " + likeCount);
+        JLabel likeCountLabel = new JLabel("Likes: " + likeCount);
         detailsPanel.add(likeCountLabel);
+
+        // Panel for actors (as buttons)
+        List<Actor> actors = actorController.getActorsByVideoID(video.getVideoID());
+        JPanel actorsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        actorsPanel.add(new JLabel("Actors:"));
+        for (Actor actor : actors) {
+            JButton actorButton = new JButton(actor.getFirstName() + " " + actor.getLastName());
+            actorButton.addActionListener(e -> {
+                // Open actor detail frame
+                JFrame actorFrame = new ActorFrame(actor, user);
+                actorFrame.setVisible(true);
+            });
+            actorsPanel.add(actorButton);
+        }
+        detailsPanel.add(actorsPanel);
 
         panel.add(detailsPanel, BorderLayout.NORTH);
 
-        // Yorumlar
-        JTextArea commentsArea = new JTextArea();
-        commentsArea.setEditable(false);
+        // Comments area (center section)
+        JPanel commentsPanel = new JPanel();
+        commentsPanel.setLayout(new BoxLayout(commentsPanel, BoxLayout.Y_AXIS));
 
+        // Fetch and display comments as blocks
         List<Comment> comments = commentController.getCommentsByVideoID(video.getVideoID());
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Yorumlar:\n");
         for (Comment c : comments) {
-            sb.append("- ").append(c.getContent()).append("\n");
-        }
-        commentsArea.setText(sb.toString());
-        panel.add(new JScrollPane(commentsArea), BorderLayout.CENTER);
+            JPanel commentBlock = new JPanel();
+            commentBlock.setLayout(new BorderLayout());
+            commentBlock.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createEmptyBorder(5, 5, 5, 5),
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY)
+            ));
 
-        // Alt panel: Yorum yapma ve beğenme
+            // Fetch username from userID (use only userID)
+            String commenterUsername = c.getUserID();
+            model.User commentUser = userController.getUserById(commenterUsername);
+            if (commentUser != null) {
+                commenterUsername = commentUser.getUsername();
+            }
+
+            String date = c.getCommentedAt().toString();
+
+            JLabel userAndDateLabel = new JLabel(commenterUsername + " - " + date);
+            userAndDateLabel.setFont(new Font("Arial", Font.BOLD, 12));
+            commentBlock.add(userAndDateLabel, BorderLayout.NORTH);
+
+            JTextArea contentArea = new JTextArea(c.getContent());
+            contentArea.setLineWrap(true);
+            contentArea.setWrapStyleWord(true);
+            contentArea.setEditable(false);
+            contentArea.setBackground(new Color(245, 245, 245));
+            commentBlock.add(contentArea, BorderLayout.CENTER);
+
+            commentsPanel.add(commentBlock);
+            commentsPanel.add(Box.createVerticalStrut(5)); // Space between comments
+        }
+
+        JScrollPane commentsScrollPane = new JScrollPane(commentsPanel);
+        commentsScrollPane.setBorder(BorderFactory.createTitledBorder("Comments"));
+        panel.add(commentsScrollPane, BorderLayout.CENTER);
+
+        // Bottom panel: comment input and like button
         JPanel bottomPanel = new JPanel(new BorderLayout());
 
-        // Yorum yapma alanı
+        // Comment input area
         JPanel commentPanel = new JPanel(new BorderLayout());
         JTextField commentField = new JTextField();
-        JButton commentButton = new JButton("Yorum Yap");
+        JButton commentButton = new JButton("Add Comment");
         commentPanel.add(commentField, BorderLayout.CENTER);
         commentPanel.add(commentButton, BorderLayout.EAST);
 
-        // Beğenme/bırakma butonu
+        // Like/unlike button
         boolean[] liked = {likeController.hasUserLikedVideo(user.getUserID(), video.getVideoID())};
-        JButton likeButton = new JButton(liked[0] ? "Beğenmekten Vazgeç" : "Beğen");
+        JButton likeButton = new JButton(liked[0] ? "Unlike" : "Like");
 
         bottomPanel.add(commentPanel, BorderLayout.CENTER);
         bottomPanel.add(likeButton, BorderLayout.EAST);
 
         panel.add(bottomPanel, BorderLayout.SOUTH);
 
-        // Yorum yapma işlemi
+        // Action for adding a comment
         commentButton.addActionListener(e -> {
             String commentText = commentField.getText().trim();
             if (!commentText.isEmpty()) {
+                // Create and add new comment
                 Comment newComment = new Comment(user.getUserID(), video.getVideoID(), commentText);
                 commentController.addComment(newComment);
-                // Yorumları yeniden çek ve göster
+
+                // Refresh comments area as blocks
                 List<Comment> updatedComments = commentController.getCommentsByVideoID(video.getVideoID());
-                StringBuilder sb2 = new StringBuilder();
-                sb2.append("Yorumlar:\n");
+                commentsPanel.removeAll();
                 for (Comment c : updatedComments) {
-                    sb2.append("- ").append(c.getContent()).append("\n");
+                    JPanel commentBlock = new JPanel();
+                    commentBlock.setLayout(new BorderLayout());
+                    commentBlock.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createEmptyBorder(5, 5, 5, 5),
+                        BorderFactory.createLineBorder(Color.LIGHT_GRAY)
+                    ));
+
+                    // Fetch username from userID (use only userID)
+                    String commenterUsername = c.getUserID();
+                    model.User commentUser = userController.getUserById(commenterUsername);
+                    if (commentUser != null) {
+                        commenterUsername = commentUser.getUsername();
+                    }
+
+                    String date = c.getCommentedAt().toString();
+
+                    JLabel userAndDateLabel = new JLabel(commenterUsername + " - " + date);
+                    userAndDateLabel.setFont(new Font("Arial", Font.BOLD, 12));
+                    commentBlock.add(userAndDateLabel, BorderLayout.NORTH);
+
+                    JTextArea contentArea = new JTextArea(c.getContent());
+                    contentArea.setLineWrap(true);
+                    contentArea.setWrapStyleWord(true);
+                    contentArea.setEditable(false);
+                    contentArea.setBackground(new Color(245, 245, 245));
+                    commentBlock.add(contentArea, BorderLayout.CENTER);
+
+                    commentsPanel.add(commentBlock);
+                    commentsPanel.add(Box.createVerticalStrut(5));
                 }
-                commentsArea.setText(sb2.toString());
+                commentsPanel.revalidate();
+                commentsPanel.repaint();
                 commentField.setText("");
             }
         });
 
-        // Beğen/bırak işlemi
+        // Action for like/unlike
         likeButton.addActionListener(e -> {
             if (liked[0]) {
-                // Beğeniyi geri al
+                // Unlike the video
                 likeController.unlikeVideo(user.getUserID(), video.getVideoID());
                 liked[0] = false;
-                likeButton.setText("Beğen");
-                JOptionPane.showMessageDialog(this, "Beğenmekten vazgeçtiniz.");
+                likeButton.setText("Like");
+                JOptionPane.showMessageDialog(this, "You unliked this video.");
             } else {
+                // Like the video
                 likeController.likeVideo(user.getUserID(), video.getVideoID());
                 liked[0] = true;
-                likeButton.setText("Beğenmekten Vazgeç"); 
-                JOptionPane.showMessageDialog(this, "Beğendiniz!");
+                likeButton.setText("Unlike");
+                JOptionPane.showMessageDialog(this, "You liked this video!");
             }
-            // Beğeni sayısını güncelle
+            // Update like count label
             int updatedLikeCount = likeController.getLikeCount(video.getVideoID());
-            likeCountLabel.setText("Beğeni: " + updatedLikeCount);
+            likeCountLabel.setText("Likes: " + updatedLikeCount);
         });
 
         add(panel);
