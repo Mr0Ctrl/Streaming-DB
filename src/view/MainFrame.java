@@ -12,6 +12,7 @@ public class MainFrame extends JFrame {
     private VideoPanel videoPanel;
     private PlaylistPanel playlistPanel;
     private LikedVideosPanel likedVideosPanel;
+    private WatchHistoryPanel watchHistoryPanel;
 
     public MainFrame(User user) {
         this.currentUser = user;
@@ -45,10 +46,12 @@ public class MainFrame extends JFrame {
         videoPanel = new VideoPanel(user);
         playlistPanel = new PlaylistPanel();
         likedVideosPanel = new LikedVideosPanel(user);
+        watchHistoryPanel = new WatchHistoryPanel(user);
 
         tabbedPane.addTab("Videos", videoPanel);
         tabbedPane.addTab("Playlists", playlistPanel);
         tabbedPane.addTab("Liked Videos", likedVideosPanel);
+        tabbedPane.addTab("Watch History", watchHistoryPanel);
 
         // Sekme değişimini dinle
         tabbedPane.addChangeListener(e -> {
@@ -56,6 +59,8 @@ public class MainFrame extends JFrame {
             String title = tabbedPane.getTitleAt(selectedIndex);
             if (title.equals("Liked Videos")) {
                 likedVideosPanel.refresh();
+            } else if (title.equals("Watch History")) {
+                watchHistoryPanel.refresh();
             }
         });
 

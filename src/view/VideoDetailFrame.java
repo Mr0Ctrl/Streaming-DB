@@ -9,6 +9,7 @@ import model.User;
 import model.Actor;
 import controller.ActorController;
 import controller.UserController; // Add this import
+import controller.PlaybackHistoryController;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,6 +20,9 @@ public class VideoDetailFrame extends JFrame {
 
     public VideoDetailFrame(Video video, User user) {
         this.user = user;
+
+        // İzleme geçmişine ekle
+        new PlaybackHistoryController().addHistory(user.getUserID(), video.getVideoID());
 
         setTitle("Video Details");
         setSize(500, 400);
