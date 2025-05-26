@@ -11,17 +11,11 @@ import java.util.List;
 
 public class VideoController {
 
-    private Connection connection;
-
-    public VideoController() {
-        connection = DatabaseConnection.getConnection();
-    }
-
     public Video getVideoDetails(String videoID) {
         Video video = null;
         String query = "SELECT * FROM Video WHERE VideoID = ?";
-        
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, videoID);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -41,7 +35,8 @@ public class VideoController {
     public List<Video> getAllVideos() {
         List<Video> videos = new ArrayList<>();
         String query = "SELECT * FROM Video";
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(query)) {
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 Video video = new Video();

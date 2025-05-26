@@ -10,15 +10,10 @@ import java.util.List;
 
 public class PlaylistController {
 
-    private Connection connection;
-
-    public PlaylistController() {
-        connection = DatabaseConnection.getConnection();
-    }
-
     public void createPlaylist(Playlist playlist) {
         String sql = "INSERT INTO Playlist (PlaylistID, Name, UserID, Description, CreatedOn, IsPublic) VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, playlist.getPlaylistID());
             pstmt.setString(2, playlist.getName());
             pstmt.setString(3, playlist.getUserID());
@@ -34,7 +29,8 @@ public class PlaylistController {
     public List<Playlist> getPlaylistsByUser(String userID) {
         List<Playlist> playlists = new ArrayList<>();
         String sql = "SELECT * FROM Playlist WHERE UserID = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, userID);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -55,7 +51,8 @@ public class PlaylistController {
 
     public void addVideoToPlaylist(String playlistID, Video video) {
         String sql = "INSERT INTO PlaylistReferenceVideo (PlaylistID, VideoID, VideoOrder) VALUES (?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, playlistID);
             pstmt.setString(2, video.getVideoID());
             pstmt.setInt(3, getNextVideoOrder(playlistID));
@@ -67,7 +64,8 @@ public class PlaylistController {
 
     private int getNextVideoOrder(String playlistID) {
         String sql = "SELECT COUNT(*) FROM PlaylistReferenceVideo WHERE PlaylistID = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, playlistID);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -82,7 +80,9 @@ public class PlaylistController {
     public List<Playlist> getAllPlaylists() {
         List<Playlist> playlists = new ArrayList<>();
         String sql = "SELECT * FROM Playlist";
-        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 Playlist playlist = new Playlist();
                 playlist.setPlaylistID(rs.getString("PlaylistID"));
@@ -101,7 +101,8 @@ public class PlaylistController {
 
     public void removePlaylist(Playlist selectedPlaylist) {
         String sql = "DELETE FROM Playlist WHERE PlaylistID = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, selectedPlaylist.getPlaylistID());
             pstmt.executeUpdate();
         } catch (SQLException e) {

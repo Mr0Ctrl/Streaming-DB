@@ -1,7 +1,7 @@
 package controller;
 
 import model.Actor;
-import model.Video; // Dosyanın başına ekleyin
+import model.Video;
 import db.DatabaseConnection;
 
 import java.sql.*;
@@ -10,17 +10,11 @@ import java.util.List;
 
 public class ActorController {
 
-    private Connection connection;
-
-    public ActorController() {
-        connection = DatabaseConnection.getConnection();
-    }
-
     public Actor getActorById(String actorId) {
         Actor actor = null;
         String query = "SELECT * FROM Actor WHERE ActorID = ?";
-        
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, actorId);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
@@ -40,8 +34,8 @@ public class ActorController {
     public List<Actor> getAllActors() {
         List<Actor> actors = new ArrayList<>();
         String query = "SELECT * FROM Actor";
-        
-        try (Statement statement = connection.createStatement()) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(query);
             while (resultSet.next()) {
                 Actor actor = new Actor();
@@ -64,7 +58,8 @@ public class ActorController {
                        "FROM Video v " +
                        "JOIN Video_Actor va ON v.VideoID = va.VideoID " +
                        "WHERE va.ActorID = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, actorId);
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
@@ -82,13 +77,13 @@ public class ActorController {
         return videos;
     }
 
-    // Bir videoda oynayan aktörleri döndürür
     public List<Actor> getActorsByVideoID(String videoId) {
         List<Actor> actors = new ArrayList<>();
         String query = "SELECT a.* FROM Actor a " +
                        "JOIN Video_Actor va ON a.ActorID = va.ActorID " +
                        "WHERE va.VideoID = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, videoId);
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
@@ -106,10 +101,10 @@ public class ActorController {
         return actors;
     }
 
-    // Aktör ekleme
     public boolean addActor(Actor actor) {
         String query = "INSERT INTO Actor (ActorID, FirstName, LastName, DateOfBirth, Biography) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, actor.getActorID());
             statement.setString(2, actor.getFirstName());
             statement.setString(3, actor.getLastName());
@@ -122,10 +117,10 @@ public class ActorController {
         return false;
     }
 
-    // Aktör silme
     public boolean deleteActor(String actorId) {
         String query = "DELETE FROM Actor WHERE ActorID = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, actorId);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {

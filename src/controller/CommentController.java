@@ -8,15 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommentController {
-    private Connection connection;
-
-    public CommentController() {
-        connection = DatabaseConnection.getConnection();
-    }
 
     public void addComment(Comment comment) {
         String query = "INSERT INTO Commented (CommentID, UserID, VideoID, CommentedAt, Content, ParentCommentID) VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = connection.prepareStatement(query)) {
             pstmt.setString(1, comment.getCommentID());
             pstmt.setString(2, comment.getUserID());
             pstmt.setString(3, comment.getVideoID());
@@ -32,7 +28,8 @@ public class CommentController {
     public List<Comment> getCommentsByVideoID(String videoID) {
         List<Comment> comments = new ArrayList<>();
         String query = "SELECT * FROM Commented WHERE VideoID = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = connection.prepareStatement(query)) {
             pstmt.setString(1, videoID);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {

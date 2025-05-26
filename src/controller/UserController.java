@@ -9,15 +9,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class UserController {
-    private DatabaseConnection dbConnection;
-
-    public UserController() {
-        dbConnection = new DatabaseConnection();
-    }
 
     public boolean login(String username, String password) {
         String query = "SELECT * FROM User WHERE Username = ? AND Password = ?";
-        try (Connection conn = dbConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, username);
             stmt.setString(2, password);
@@ -28,12 +23,11 @@ public class UserController {
             e.printStackTrace();
             return false;
         }
-        
     }
 
     public User getUserByUsername(String username) {
         String query = "SELECT * FROM User WHERE Username = ?";
-        try (Connection conn = dbConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
@@ -53,7 +47,7 @@ public class UserController {
 
     public User getUserById(String userId) {
         String query = "SELECT * FROM User WHERE UserID = ?";
-        try (Connection conn = dbConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, userId);
             ResultSet rs = stmt.executeQuery();
